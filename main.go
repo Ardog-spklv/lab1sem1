@@ -14,18 +14,13 @@ func main() {
 	args := os.Args[1:]
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
-		case "--file":
-			if i+1 < len(args) { filename = args[i+1]; i++ }
-		case "--query":
-			if i+1 < len(args) { query = args[i+1]; i++ }
+		case "--file": if i+1 < len(args) { filename = args[i+1]; i++ }
+		case "--query": if i+1 < len(args) { query = args[i+1]; i++ }
 		}
 	}
 
 	db := NewDatabase()
-	if err := db.LoadFromFile(filename); err != nil {
-		fmt.Fprintln(os.Stderr, "Error loading:", err)
-	}
-
+	if err := db.LoadFromFile(filename); err != nil { fmt.Fprintln(os.Stderr, "Error loading:", err) }
 	if query == "" { return }
 
 	tokens := strings.Fields(query)
@@ -35,46 +30,20 @@ func main() {
 	name := tokens[1]
 	val := ""
 	if len(tokens) > 2 { val = tokens[2] }
+	val2 := ""
+	if len(tokens) > 3 { val2 = tokens[3] }
 
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Fprintln(os.Stderr, "Error:", r)
-		}
-	}()
+	defer func() { if r := recover(); r != nil { fmt.Fprintln(os.Stderr, "Error:", r) } }()
 
-	atoi := func(s string) int {
-		v, err := strconv.Atoi(s)
-		if err != nil { panic("expected integer") }
-		return v
-	}
+	atoi := func(s string) int { v, err := strconv.Atoi(s); if err != nil { panic("expected integer") }; return v }
 
-	getOrCreateA := func(m map[string]*MyArray, n string) *MyArray {
-		if _, ok := m[n]; !ok { m[n] = &MyArray{} }
-		return m[n]
-	}
-	getOrCreateF := func(m map[string]*ForwardList, n string) *ForwardList {
-		if _, ok := m[n]; !ok { m[n] = &ForwardList{} }
-		return m[n]
-	}
-	getOrCreateD := func(m map[string]*DoublyList, n string) *DoublyList {
-		if _, ok := m[n]; !ok { m[n] = &DoublyList{} }
-		return m[n]
-	}
-	getOrCreateS := func(m map[string]*MyStack, n string) *MyStack {
-		if _, ok := m[n]; !ok { m[n] = &MyStack{} }
-		return m[n]
-	}
-	getOrCreateQ := func(m map[string]*MyQueue, n string) *MyQueue {
-		if _, ok := m[n]; !ok { m[n] = &MyQueue{} }
-		return m[n]
-	}
+	getOrCreateA := func(m map[string]*MyArray, n string) *MyArray { if _, ok := m[n]; !ok { m[n] = &MyArray{} }; return m[n] }
+	getOrCreateF := func(m map[string]*ForwardList, n string) *ForwardList { if _, ok := m[n]; !ok { m[n] = &ForwardList{} }; return m[n] }
+	getOrCreateD := func(m map[string]*DoublyList, n string) *DoublyList { if _, ok := m[n]; !ok { m[n] = &DoublyList{} }; return m[n] }
+	getOrCreateS := func(m map[string]*MyStack, n string) *MyStack { if _, ok := m[n]; !ok { m[n] = &MyStack{} }; return m[n] }
+	getOrCreateQ := func(m map[string]*MyQueue, n string) *MyQueue { if _, ok := m[n]; !ok { m[n] = &MyQueue{} }; return m[n] }
 
-	saveAndSay := func(msg string) {
-		if err := db.SaveToFile(filename); err != nil {
-			fmt.Fprintln(os.Stderr, "Save error:", err)
-		}
-		fmt.Println(msg)
-	}
+	saveAndSay := func(msg string) { if err := db.SaveToFile(filename); err != nil { fmt.Fprintln(os.Stderr, "Save error:", err) }; fmt.Println(msg) }
 
 	switch cmd {
 	case "PRINT":
@@ -87,31 +56,41 @@ func main() {
 		if !found { fmt.Fprintf(os.Stderr, "Error: Container '%s' not found\n", name) }
 
 	case "MPUSH": getOrCreateA(db.Arrays, name).PushBack(val); saveAndSay("MPUSH ok")
-	case "MINSERT": getOrCreateA(db.Arrays, name).InsertAt(atoi(val), tokens[3]); saveAndSay("MINSERT ok")
+	case "MINSERT": getOrCreateA(db.Arrays, name).InsertAt(atoi(val), val2); saveAndSay("MINSERT ok")
 	case "MGET": v, _ := getOrCreateA(db.Arrays, name).Get(atoi(val)); fmt.Println(v)
-	case "MUPDATE": getOrCreateA(db.Arrays, name).UpdateAt(atoi(val), tokens[3]); saveAndSay("MUPDATE ok")
+	case "MUPDATE": getOrCreateA(db.Arrays, name).UpdateAt(atoi(val), val2); saveAndSay("MUPDATE ok")
 	case "MDEL_AT": getOrCreateA(db.Arrays, name).RemoveAt(atoi(val)); saveAndSay("MDEL_AT ok")
 	case "MDEL_VALUE": getOrCreateA(db.Arrays, name).RemoveByValue(val); saveAndSay("MDEL_VALUE ok")
 	case "MLEN": fmt.Println(getOrCreateA(db.Arrays, name).Length())
 
 	case "FPUSH_FRONT": getOrCreateF(db.ForwardLists, name).PushFront(val); saveAndSay("FPUSH_FRONT ok")
 	case "FPUSH_BACK": getOrCreateF(db.ForwardLists, name).PushBack(val); saveAndSay("FPUSH_BACK ok")
-	case "FINSERT_BEFORE_AT": getOrCreateF(db.ForwardLists, name).InsertBeforeAt(atoi(val), tokens[3]); saveAndSay("FINSERT_BEFORE_AT ok")
-	case "FINSERT_AFTER_AT": getOrCreateF(db.ForwardLists, name).InsertAfterAt(atoi(val), tokens[3]); saveAndSay("FINSERT_AFTER_AT ok")
+	case "FINSERT_BEFORE_AT": getOrCreateF(db.ForwardLists, name).InsertBeforeAt(atoi(val), val2); saveAndSay("FINSERT_BEFORE_AT ok")
+	case "FINSERT_AFTER_AT": getOrCreateF(db.ForwardLists, name).InsertAfterAt(atoi(val), val2); saveAndSay("FINSERT_AFTER_AT ok")
+	case "FINSERT_BEFORE_VAL": getOrCreateF(db.ForwardLists, name).InsertBeforeValue(val, val2); saveAndSay("FINSERT_BEFORE_VAL ok")
+	case "FINSERT_AFTER_VAL": getOrCreateF(db.ForwardLists, name).InsertAfterValue(val, val2); saveAndSay("FINSERT_AFTER_VAL ok")
 	case "FPOP_FRONT": getOrCreateF(db.ForwardLists, name).PopFront(); saveAndSay("FPOP_FRONT ok")
 	case "FPOP_BACK": getOrCreateF(db.ForwardLists, name).PopBack(); saveAndSay("FPOP_BACK ok")
 	case "FDEL_AT": getOrCreateF(db.ForwardLists, name).RemoveAt(atoi(val)); saveAndSay("FDEL_AT ok")
 	case "FDEL_VALUE": getOrCreateF(db.ForwardLists, name).RemoveByValue(val); saveAndSay("FDEL_VALUE ok")
+	case "FDEL_ALL": getOrCreateF(db.ForwardLists, name).RemoveAllByValue(val); saveAndSay("FDEL_ALL ok")
+	case "FDEL_BEFORE": getOrCreateF(db.ForwardLists, name).RemoveBeforeValue(val); saveAndSay("FDEL_BEFORE ok")
+	case "FDEL_AFTER": getOrCreateF(db.ForwardLists, name).RemoveAfterValue(val); saveAndSay("FDEL_AFTER ok")
 	case "FGET": fmt.Println(getOrCreateF(db.ForwardLists, name).Find(val))
 
 	case "LPUSH_FRONT": getOrCreateD(db.DoublyLists, name).PushFront(val); saveAndSay("LPUSH_FRONT ok")
 	case "LPUSH_BACK": getOrCreateD(db.DoublyLists, name).PushBack(val); saveAndSay("LPUSH_BACK ok")
-	case "LINSERT_BEFORE_AT": getOrCreateD(db.DoublyLists, name).InsertBeforeAt(atoi(val), tokens[3]); saveAndSay("LINSERT_BEFORE_AT ok")
-	case "LINSERT_AFTER_AT": getOrCreateD(db.DoublyLists, name).InsertAfterAt(atoi(val), tokens[3]); saveAndSay("LINSERT_AFTER_AT ok")
+	case "LINSERT_BEFORE_AT": getOrCreateD(db.DoublyLists, name).InsertBeforeAt(atoi(val), val2); saveAndSay("LINSERT_BEFORE_AT ok")
+	case "LINSERT_AFTER_AT": getOrCreateD(db.DoublyLists, name).InsertAfterAt(atoi(val), val2); saveAndSay("LINSERT_AFTER_AT ok")
+	case "LINSERT_BEFORE_VAL": getOrCreateD(db.DoublyLists, name).InsertBeforeValue(val, val2); saveAndSay("LINSERT_BEFORE_VAL ok")
+	case "LINSERT_AFTER_VAL": getOrCreateD(db.DoublyLists, name).InsertAfterValue(val, val2); saveAndSay("LINSERT_AFTER_VAL ok")
 	case "LPOP_FRONT": getOrCreateD(db.DoublyLists, name).PopFront(); saveAndSay("LPOP_FRONT ok")
 	case "LPOP_BACK": getOrCreateD(db.DoublyLists, name).PopBack(); saveAndSay("LPOP_BACK ok")
 	case "LDEL_AT": getOrCreateD(db.DoublyLists, name).RemoveAt(atoi(val)); saveAndSay("LDEL_AT ok")
 	case "LDEL_VALUE": getOrCreateD(db.DoublyLists, name).RemoveByValue(val); saveAndSay("LDEL_VALUE ok")
+	case "LDEL_ALL": getOrCreateD(db.DoublyLists, name).RemoveAllByValue(val); saveAndSay("LDEL_ALL ok")
+	case "LDEL_BEFORE": getOrCreateD(db.DoublyLists, name).RemoveBeforeValue(val); saveAndSay("LDEL_BEFORE ok")
+	case "LDEL_AFTER": getOrCreateD(db.DoublyLists, name).RemoveAfterValue(val); saveAndSay("LDEL_AFTER ok")
 	case "LGET": fmt.Println(getOrCreateD(db.DoublyLists, name).Find(val))
 
 	case "SPUSH": getOrCreateS(db.Stacks, name).Push(val); saveAndSay("SPUSH ok")
@@ -120,7 +99,7 @@ func main() {
 	case "QPUSH": getOrCreateQ(db.Queues, name).Push(val); saveAndSay("QPUSH ok")
 	case "QPOP": v, _ := getOrCreateQ(db.Queues, name).Pop(); fmt.Println(v); db.SaveToFile(filename)
 
-	default:
-		fmt.Fprintln(os.Stderr, "Unknown command:", cmd)
+	default: fmt.Fprintln(os.Stderr, "Unknown command:", cmd)
 	}
 }
+
